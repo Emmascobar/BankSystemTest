@@ -21,7 +21,7 @@ public class AdminControllerImpl implements AdminController {
     @Autowired
     AdminService adminService;
 
-
+    /* Set of ADMIN routes */
     @GetMapping("/admin/accounts")
     @ResponseStatus(HttpStatus.OK)
     public List<Account> getAllAccounts() {
@@ -79,7 +79,7 @@ public class AdminControllerImpl implements AdminController {
     public void updateMinimumBalance(@PathVariable Long id, @RequestBody SavingMinimumBalanceDTO savingMinimumBalanceDTO) {
         adminService.updateMinimumBalance(id, savingMinimumBalanceDTO);
     }
-    @DeleteMapping("/accounts/{id}")
+    @DeleteMapping("/admin/accounts/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(@PathVariable Long id) {
         adminService.deleteAccount(id);

@@ -90,13 +90,13 @@ class AdminControllerImplTest {
 
     @BeforeEach
     void setUp() {
-    /* SET USERS AND TIPES OF ROLES */
+
 
 
     /* ADDRESS */
-        address01 = new Address("Carrer de la Argentina 3", "Barcelona", 8041);
-        address02 = new Address("Calle Ecuador", "Buenos Aires", 2041);
-        address03 = new Address("Lincoln Road Avenue 963", "Miami", 1963);
+    address01 = new Address("Carrer de la Argentina 3", "Barcelona", 8041);
+    address02 = new Address("Calle Ecuador", "Buenos Aires", 2041);
+    address03 = new Address("Lincoln Road Avenue 963", "Miami", 1963);
 
 
     /* SET USERS - ACCOUNTS-HOLDERS */
@@ -109,6 +109,7 @@ class AdminControllerImplTest {
     admin = new Admin("Pavlo Menendez", "pavlomenendez88", passwordEncoder.encode("pavlomenendez88"));
     adminRepository.save(admin);
 
+    /* SET USERS AND TIPES OF ROLES */
     adminUserRole = new Role("ADMIN", accountHolder2);
     roleRepository.save(adminUserRole);
     holderUserRole = new Role("ACCOUNT_HOLDER", accountHolder1);

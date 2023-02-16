@@ -22,10 +22,11 @@ public abstract class User {
     @JoinColumn(name="user_id")
     private List<Role> roles;
 
-    public User(String name, String username, String password) {
+    public User(String name, String username, String password, List<Role> roles){
         this.name = name;
         this.username = username;
         this.password = password;
+        this.roles = roles;
     }
 
     public User() {

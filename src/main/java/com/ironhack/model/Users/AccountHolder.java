@@ -1,5 +1,4 @@
 package com.ironhack.model.Users;
-
 import com.ironhack.model.Utils.Address;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;

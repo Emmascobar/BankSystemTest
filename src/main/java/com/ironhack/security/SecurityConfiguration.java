@@ -1,4 +1,5 @@
 package com.ironhack.security;
+
 import com.ironhack.filters.CustomAuthenticationFilter;
 import com.ironhack.filters.CustomAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,58 +17,51 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-// Esta es la clase mas editable del security model
 @Configuration
 public class SecurityConfiguration {
-    // UserDetailsService is an interface provided by Spring Security that defines a way to retrieve user information
-    // Implementation is in CustomUserDetailsService
     @Autowired
-    private UserDetailsService userDetailsService; // CON ESTA LINEA SE ENLAZAN LOS USUARIOS DE LA BD A SPRINGSECURITY. SE COPIA Y PEGA.
-
-    // Autowired instance of the AuthenticationManagerBuilder
+    private UserDetailsService userDetailsService;
     @Autowired
-    private AuthenticationManagerBuilder authManagerBuilder; // NOS AYUDA CONSTRUIR LAS AUTENTIFICACIONES. COPIAR Y PEGAR.
+    private AuthenticationManagerBuilder authManagerBuilder;
 
-    @Bean // METODO DE JAVA QUE EXTIENDE MUCHAS OTRAS FUNCIONES. COPIAR Y PEGAR.
-    public PasswordEncoder passwordEncoder() { // Este metodo encripta la contraseña para que no sea visible a simple vista en una BD)
-        return new BCryptPasswordEncoder(); // Las contraseñas nunca se devuelven en las peticiones de HTTP - Idealmente crearse un DTO.
-
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
-
-    @Bean // ESTE BEAN AYUDA A REALIZAR TODAS LAS AUTENTIFICACIONES NECESARIAS. COPIAR Y PEGAR.
+    @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
-
-    @Bean // ESTE ES EL MAS IMPORTANTE. ES EL METODO DE PASOS Y FILTROS QUE SE EJECUTARA EN LA RUTA DE AUTENTIFICACION. COPIAR Y PEGAR COMPLETO.
+    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
-        // CustomAuthenticationFilter instance created. // FUNCIONA COMO UN FILTRO EN LA URL DE LOGIN.
         CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authManagerBuilder.getOrBuild());
-
-        // set the URL that the filter should process. // AQUI DEFINE LA RUTA EN LA QUE NOS AUTENTIFICAREMOS.
         customAuthenticationFilter.setFilterProcessesUrl("/login");
-
-        // disable CSRF protection. //
+        /* disable */
         http.csrf().disable();
-
-        // set the session creation policy to stateless // CON ESTO DEFINIMOS QUE LA SESION NO VA A GUARDAR INFORMACION
-        //DE SESIONES DENTRO DEL SERVIDOR, QUE VA A SER STATELESS, PORQUE VAMOS A USAR TOKENS. COPIAR Y PEGAR.
+        /* Stateless */
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        /* Filter routes */
+        http.authorizeHttpRequests()
+                /* Autentificated routas for Users */
+                .requestMatchers(HttpMethod.GET, "/user/login/**").authenticated()
+                .requestMatchers(HttpMethod.POST, "/user/login/**").authenticated()
+                .requestMatchers(HttpMethod.GET, "User/accounts/thirdparty/{id}/**").authenticated()
+                /* Admin routes protected by roles*/
+                .requestMatchers(HttpMethod.GET, "/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/admin/**").hasRole("ADMIN")
+                /* Common Users routes protected */
+                .requestMatchers(HttpMethod.GET, "User/accounts/{id}/transference**").hasRole("USER")
+                .requestMatchers(HttpMethod.GET, "user/accounts/account-holder/{id}").hasAnyRole("USER", "ADMIN")
+                /* rest are secure */
+                .anyRequest().permitAll();
 
-        // set up authorization for different request matchers and user roles. //AQUI SETEAMOS LAS RUTAS A PROTEGER.
-        http.authorizeHttpRequests() //DEFINIMOS LA MANERA DE LA QUE LA VAMOS A PROTEGER.
-
-                .anyRequest().permitAll(); //Esto dice que el resto de las rutas de la API serian públicas.
-
-        http.addFilter(customAuthenticationFilter);
         // Add the custom authorization filter before the standard authentication filter.
-        http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilter(customAuthenticationFilter);
         // Build the security filter chain to be returned.
+        http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
 
     }
 }
-
-// EN EL SECURITY CONFIGURATION LO UNICO QUE DEBEMOS CAMBIAR
-// Y/O MODIFICAR SON LAS RUTAS A PROTEGER EN http.authorizeHttpRequests()
