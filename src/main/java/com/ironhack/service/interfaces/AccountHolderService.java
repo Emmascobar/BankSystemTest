@@ -11,7 +11,7 @@ public interface AccountHolderService {
     AccountHolder createAccount (AccountHolder accountHolder);
     AccountHolder getAccountById(Long id, CustomUserDetails user);
     Money getAccountBalance (Long id);
-    Money getCreditBalance (Long id);
+    Money getSavingBalance (Long id);
     void transference(BigDecimal amount, Long ownerId, String ownerName, Long destinationId);
 
 

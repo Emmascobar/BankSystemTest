@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -43,8 +44,6 @@ public class AdminServiceImpl implements AdminService {
     @Autowired
     AccountHoldersRepository accountHoldersRepository;
     @Autowired
-    UserRepository userRepository;
-    @Autowired
     RoleRepository roleRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
@@ -58,9 +57,9 @@ public class AdminServiceImpl implements AdminService {
         return accountRepository.findAll();
     }
 
-    /* Find and get an account by Id */
+    /* Find and get an account by ID */
     public Account getAccountById(Long id) {
-        return accountRepository.findAccountById(id);
+        return accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
     }
 
     /* Create a new admin User account */
@@ -88,7 +87,7 @@ public class AdminServiceImpl implements AdminService {
 
     //ADD NEW BANK ACCOUNT // Age condition (>24) to create a student or normal account // CASTING PARAMS.
     public Account addNewBankAccount(String typeOfAccount, Account account) {
-        if (typeOfAccount == "Saving") {
+        if (Objects.equals(typeOfAccount, "Saving")) {
             // SAVING ACCOUNT CREATED
             Saving saving = new Saving();
             // CASTING PARAMS FROM ACCOUNT
@@ -101,7 +100,7 @@ public class AdminServiceImpl implements AdminService {
             // SAVE THE NEW SAVING ACCOUNT IN REPOSITORY
             return savingRepository.save(saving);
 
-        } else if (typeOfAccount == "Credit Card") {
+        } else if (Objects.equals(typeOfAccount, "Credit Card")) {
             // CREDIT CARD ACCOUNT CREATED
             CreditCard creditCard = new CreditCard();
             // CASTING PARAMS FROM ACCOUNT
@@ -114,7 +113,7 @@ public class AdminServiceImpl implements AdminService {
             // SAVE THE NEW CREDIT CARD ACCOUNT IN REPOSITORY
             return creditCardRepository.save(creditCard);
 
-        } else if (typeOfAccount == "Checking") {
+        } else if (Objects.equals(typeOfAccount, "Checking")) {
             /* Get the age from the birthday with ChronoUnit */
             LocalDate today = LocalDate.now();
             LocalDate birthday = account.getPrimaryOwner().getDateOfBirth();
@@ -146,7 +145,7 @@ public class AdminServiceImpl implements AdminService {
                 return checkingRepository.save(checking);
             }
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Type of account NO valid");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Type of account NO valid. Define a new one");
         }
     }
 
@@ -175,6 +174,7 @@ public class AdminServiceImpl implements AdminService {
     /* Update Credits limits */
     public void updateCreditLimit(Long id, BigDecimal creditLimit) {
         CreditCard creditCard = creditCardRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Credit Card ID not found"));
+        /* Check conditions for limits (>100  && < 100000) */
         if (creditLimit.compareTo(new BigDecimal(100000)) == 1) {
             throw new RuntimeException("Credit Limit cannot be higher than 100.000. Define a new one");
         } else if (creditLimit.compareTo(new BigDecimal(100)) == -1 && (creditLimit.compareTo(new BigDecimal(100000)) == 1)) {
@@ -188,7 +188,7 @@ public class AdminServiceImpl implements AdminService {
     // Update accounts interest rate // SAVINGS AND CREDIT CARDS.
     public void updateInterestRate(Long id, BigDecimal interestRate) {
         Account account = accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saving count not found"));
-
+        /* Update Saving Interest rate */
         if (account instanceof Saving) {
             if (interestRate.compareTo(new BigDecimal("0.5")) == 1) {
                 throw new RuntimeException("Interest Rate cannot be higher than 0.5. Define a new one");
@@ -199,6 +199,7 @@ public class AdminServiceImpl implements AdminService {
                 throw new RuntimeException("Interest Rate cannot be lower than 0.0025. Define a new one");
             }
         }
+        /* Update Credit Card Interest rate */
         if (account instanceof CreditCard) {
             if (interestRate.compareTo(new BigDecimal("0.1")) == -1) {
                 throw new RuntimeException("Interest Rate cannot be lower than 0.1. Default value = 0.2. Define a new one");
@@ -206,6 +207,7 @@ public class AdminServiceImpl implements AdminService {
                 ((CreditCard) account).setInterestRate(interestRate);
                 creditCardRepository.save((CreditCard) account);
             } else {
+                throw new RuntimeException("Interest Rate cannot be higher than 0.2. Define a new one");
             }
         }
     }

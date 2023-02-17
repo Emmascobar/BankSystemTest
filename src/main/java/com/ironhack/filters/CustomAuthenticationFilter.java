@@ -32,36 +32,34 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     /**
      * Constructor for CustomAuthenticationFilter
-     *
      * @param authenticationManager
+     *
      */
     public CustomAuthenticationFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
     }
-
     /**
      * Attempts to authenticate the user with given credentials
-     *
      * @param request  HttpServletRequest
      * @param response HttpServletResponse
      * @return Authentication object if successful, otherwise throws an exception
      * @throws AuthenticationException
-     */
+     *
+     **/
     @Override
-    // ESTE METODO LLAMA A LA AUTENTIFICACION, CORROBORA EL USUARIO Y PASSWORD, Y DEVUELVE EL PASO AL TOKEN.
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         log.info("Username is: {}", username);
         log.info("Password is: {}", password);
 
-        // Creating an Authentication token with given username and password. CREA EL TOKEN Y LO AUTENTICA
+        // Creating an Authentication token with given username and password.
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, password);
-        // Attempting to authenticate the user with the given credentials
+        // Attempting to authenticate the user with the given credentials.
         return authenticationManager.authenticate(authenticationToken);
     }
 
-    /**
+     /**
      * Method is called if the user is successfully authenticated
      *
      * @param request        HttpServletRequest
@@ -70,14 +68,15 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
      * @param authentication Authentication
      * @throws IOException
      * @throws ServletException
-     */
+     *
+     **/
     @Override
-    // AQUI SE GENERA EL TOKEN. SI EL PASO ANTERIOR FUE SUCCESFULL.
+    // AQUI SE GENERA EL TOKEN. SI EL PASO ANTERIOR FUE SUCCESSFUL.
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authentication) throws IOException, ServletException {
         // Cast the authentication principal to User object
         User user = (User) authentication.getPrincipal();
-        // Creating an HMAC256 encoded JWT with secret key. El secret se genera y cambia solo desde otro lado.
-        Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
+        // Creating an HMAC256 encoded JWT with secret key.
+        Algorithm algorithm = Algorithm.HMAC256("BankingSystem0110Proyectofinal".getBytes());
         // Adding user details and roles to the token
         log.info("Token expires at " + new Date(System.currentTimeMillis() + 10 * 60 * 1000));
         String accessToken = JWT.create()
@@ -87,7 +86,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                 .withClaim("roles", user.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()))
                 .sign(algorithm);
 
-        //RESPUESTA:
+        //RTA:
         // Creating a map with the generated token
         Map<String, String> tokens = new HashMap<>();
         tokens.put("access_token", accessToken);

@@ -100,13 +100,13 @@ class AdminControllerImplTest {
 
 
     /* SET USERS - ACCOUNTS-HOLDERS */
-    accountHolder1 = new AccountHolder("Matias Fabbro", "mattfabbro", passwordEncoder.encode("mattfabbro88"), LocalDate.of(1988,03,24), address01, address03);
+    accountHolder1 = new AccountHolder("Matias Fabbro", "mattfabbro", passwordEncoder.encode("mattfabbro88"), List.of(holderUserRole), LocalDate.of(1988,03,24), address01, address03);
     accountHoldersRepository.save(accountHolder1);
-    accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"), LocalDate.of(1988,06,14), address02, null);
+    accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"),List.of(adminUserRole) ,LocalDate.of(1988,06,14), address02, null);
     accountHoldersRepository.save(accountHolder2);
-    accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"), LocalDate.of(1998,02,21), address03, null);
+    accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"),List.of(holderUserRole), LocalDate.of(1998,02,21), address03, null);
     accountHoldersRepository.save(accountHolder3);
-    admin = new Admin("Pavlo Menendez", "pavlomenendez88", passwordEncoder.encode("pavlomenendez88"));
+    admin = new Admin("Pavlo Menendez", "pavlomenendez88", passwordEncoder.encode("pavlomenendez88"), List.of(adminUserRole));
     adminRepository.save(admin);
 
     /* SET USERS AND TIPES OF ROLES */

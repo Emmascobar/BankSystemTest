@@ -11,10 +11,11 @@ import com.ironhack.repository.Accounts.AccountRepository;
 import com.ironhack.repository.Accounts.CreditCardRepository;
 import com.ironhack.repository.Users.AccountHoldersRepository;
 import com.ironhack.repository.Users.RoleRepository;
-import com.ironhack.repository.Users.UserRepository;
 import com.ironhack.repository.Utils.TransferenceRepository;
 import com.ironhack.security.CustomUserDetails;
 import com.ironhack.service.interfaces.AccountHolderService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Service
 public class AccountHolderServiceImpl implements AccountHolderService {
@@ -29,21 +31,23 @@ public class AccountHolderServiceImpl implements AccountHolderService {
     @Autowired
     AccountHoldersRepository accountHoldersRepository;
     @Autowired
-    AccountRepository accountRepository;
+    TransferenceRepository transferenceRepository;
     @Autowired
     CreditCardRepository creditCardRepository;
     @Autowired
-    RoleRepository roleRepository;
+    AccountRepository accountRepository;
     @Autowired
-    private UserRepository userRepository;
+    RoleRepository roleRepository;
     @Autowired
     PasswordEncoder passwordEncoder;
     String encodedPassword;
     Role role;
-    @Autowired
-    private TransferenceRepository transferenceRepository;
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
 
-    /** ------------------------------------------------------------------------------------- **/
+
+    /**
+     * -------------------------------------------------------------------------------------
+     **/
 
     /* Create a new user Account */
     public AccountHolder createAccount(AccountHolder accountHolder) {
@@ -57,14 +61,14 @@ public class AccountHolderServiceImpl implements AccountHolderService {
     /* Enter to user account system with ID & Credencials */
 
     public AccountHolder getAccountById(Long id, CustomUserDetails user) {
-        return accountHoldersRepository.findAccountHolderById(id);
+        return accountHoldersRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
         // AQUI DEBO PASAR CREDENCIALES, AVERIGUAR COMO //
     }
 
     public Money getAccountBalance(Long id) {
         /* Every time the balance is accessed for user. The SAVINGS are checked with the Setmethod,
         And if it's been more than a month they apply or not, */
-        Account account = accountRepository.findAccountById(id);
+        Account account = accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
         boolean negativeBalance = (account.getBalance().getAmount().compareTo(((Saving) account).getMinimumBalance().getAmount()) == -1);
         if (account instanceof Saving && negativeBalance) {
             account.setBalance(new Money(account.getBalance().getAmount().subtract(((Saving) account).getPenaltyFee())));
@@ -74,11 +78,14 @@ public class AccountHolderServiceImpl implements AccountHolderService {
         than a month, the monthly interest must be applied automatically and returning the updated Balance */
         else if (account instanceof CreditCard) {
             ((CreditCard) account).setMonthlyInterestRate();
+            creditCardRepository.save((CreditCard) account);
         }
         return account.getBalance();
     }
-    public Money getCreditBalance(Long id) {
-        Account account = accountRepository.findAccountById(id);
+
+    public Money getSavingBalance(Long id) {
+        Account account = accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+        ;
         /* Every time the balance of a Saving Account is accessed, it is checked with the setMethod. if
         the elapsed time is more than a year, the interest must be applied automatically and returning
         the updated Balance. */
@@ -90,11 +97,15 @@ public class AccountHolderServiceImpl implements AccountHolderService {
 
 
     public void transference(BigDecimal amount, Long ownerId, String ownerName, Long destinationId) {
-        Account destination = accountRepository.findAccountById(destinationId);
-        Account ownAccount = accountRepository.findAccountById(ownerId);
+        Account destination = accountRepository.findById(destinationId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination ID not found"));
+        ;
+        Account ownAccount = accountRepository.findById(ownerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Origin Account ID not found"));
+        ;
 
         if (destination.getPrimaryOwner().getName() == ownerName || destination.getSecondaryOwner().getName() == ownerName) {
+            /* Checking funds */
             if (amount.compareTo(destination.getBalance().getAmount()) == -1) {
+                /* Enough founds to get a transfer */
                 destination.setBalance(new Money(destination.getBalance().increaseAmount(amount)));
                 accountRepository.save(destination);
                 ownAccount.setBalance(new Money(ownAccount.getBalance().decreaseAmount(amount)));
@@ -105,13 +116,16 @@ public class AccountHolderServiceImpl implements AccountHolderService {
                     ownAccount.setBalance(new Money(ownAccount.getBalance().getAmount().subtract(((Saving) ownAccount).getPenaltyFee())));
                 }
                 accountRepository.save(ownAccount);
+                /* Save & Registry transfer on system and database */
                 Transference registry = new Transference(amount, destinationId, ownerId);
                 transferenceRepository.save(registry);
+
+                log.info("Transference registry on DateBase, from " + ownerId + " to " + destinationId + " with a amount of " + amount + " at " + LocalDate.now());
+
+                /* Without funds for transfer money*/
             } else {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Insufficient funds");
             }
-            } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "ID/NAME not matching with a destination account. Please review");
         }
     }
 }

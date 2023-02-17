@@ -33,14 +33,14 @@ public class AccountHolderControllerImpl implements AccountHolderController {
 
     /* Balances GETMAPPING of Account Holders */
     //METER LA AUTENTIFICACION misma arriba. REVISAR SERVICES.
-    @GetMapping("user/accounts/account-holder/{id}")
+    @GetMapping("user/login/accounts/{id}")
     @ResponseStatus(HttpStatus.OK)
     public Money getAccountBalance(@PathVariable Long id) {
         return accountHolderService.getAccountBalance(id);
     }
 
     /* Transferences POSTMAPPING of Account Holders */
-    @PostMapping("User/accounts/{id}/transference")
+    @PostMapping("User/login/accounts/{id}/transference")
     @ResponseStatus(HttpStatus.CREATED)
     public void transference(@PathVariable Long id, @RequestBody BigDecimal amount, String ownerName, Long destinationId) {
         accountHolderService.transference(amount, id, ownerName, destinationId);
