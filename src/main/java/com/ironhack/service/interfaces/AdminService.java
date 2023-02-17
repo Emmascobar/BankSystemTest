@@ -5,6 +5,7 @@ import com.ironhack.model.Accounts.Account;
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Users.Admin;
 import com.ironhack.model.Users.ThirdParty;
+import com.ironhack.model.Users.User;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
 public interface AdminService {
     List<Account> getAllAccounts();
     Account getAccountById(Long id);
+    List<User> getAllUsers();
     Account addNewBankAccount (String typeOfAccount, Account account);
     Admin addNewAdminUser (Admin admin);
     AccountHolder addNewAccountHolder (AccountHolder accountHolder);

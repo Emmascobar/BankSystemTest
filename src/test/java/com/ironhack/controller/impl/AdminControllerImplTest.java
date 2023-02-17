@@ -91,8 +91,6 @@ class AdminControllerImplTest {
     @BeforeEach
     void setUp() {
 
-
-
     /* ADDRESS */
     address01 = new Address("Carrer de la Argentina 3", "Barcelona", 8041);
     address02 = new Address("Calle Ecuador", "Buenos Aires", 2041);
@@ -100,26 +98,20 @@ class AdminControllerImplTest {
 
 
     /* SET USERS - ACCOUNTS-HOLDERS */
-    accountHolder1 = new AccountHolder("Matias Fabbro", "mattfabbro", passwordEncoder.encode("mattfabbro88"), List.of(holderUserRole), LocalDate.of(1988,03,24), address01, address03);
+    accountHolder1 = new AccountHolder("Matias Fabbro", "mattfabbro", passwordEncoder.encode("mattfabbro88"),  LocalDate.of(1988,03,24), address01, address03);
     accountHoldersRepository.save(accountHolder1);
-    accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"),List.of(adminUserRole) ,LocalDate.of(1988,06,14), address02, null);
+    accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"),LocalDate.of(1988,06,14), address02, null);
     accountHoldersRepository.save(accountHolder2);
-    accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"),List.of(holderUserRole), LocalDate.of(1998,02,21), address03, null);
+    accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"), LocalDate.of(1998,02,21), address03, null);
     accountHoldersRepository.save(accountHolder3);
-    admin = new Admin("Pavlo Menendez", "pavlomenendez88", passwordEncoder.encode("pavlomenendez88"), List.of(adminUserRole));
+    admin = new Admin("Pavlo Menendez", "pavlomenendez88", passwordEncoder.encode("pavlomenendez88"));
     adminRepository.save(admin);
-
-    /* SET USERS AND TIPES OF ROLES */
-    adminUserRole = new Role("ADMIN", accountHolder2);
-    roleRepository.save(adminUserRole);
-    holderUserRole = new Role("ACCOUNT_HOLDER", accountHolder1);
-    roleRepository.save(holderUserRole);
 
     /* BANK ACCOUNTS */
     saving01 = new Saving(new Money(new BigDecimal("250")), 123456, accountHolder1, null, new BigDecimal("40"), LocalDate.now(), Status.ACTIVE, new Money(new BigDecimal("500")), new BigDecimal("0.2"), null );
-    savingRepository.save(saving01);
     saving02 = new Saving(new Money(new BigDecimal("250")), 456789, accountHolder2, null, new BigDecimal("40"), LocalDate.now(), Status.FROZEN, new Money(new BigDecimal("50")), new BigDecimal("0.1"), null );
     saving03 = new Saving(new Money(new BigDecimal("250")), 568942, accountHolder3, accountHolder1, new BigDecimal("40"), LocalDate.now(), Status.ACTIVE, new Money(new BigDecimal("100")), new BigDecimal("0.02"), null );
+    savingRepository.saveAll(List.of(saving01, saving02, saving03));
     checking = new Checking(new Money(new BigDecimal("250")), 568942, accountHolder3, null, new BigDecimal("40"), LocalDate.now(), Status.ACTIVE, new Money(new BigDecimal("100")), new BigDecimal("0.02"));
     checkingRepository.save(checking);
     creditCard = new CreditCard(new Money(new BigDecimal("250")), 456789, accountHolder2, null, new BigDecimal("40"), LocalDate.now(), Status.FROZEN, new BigDecimal("500"), new BigDecimal("0.2"), null );
@@ -127,9 +119,6 @@ class AdminControllerImplTest {
     thirdParty = new ThirdParty(new Money(new BigDecimal("500")), "AAB123456");
     thirdPartyRepository.save(thirdParty);
 
-    /* SET ROLES ON ACCOUNTS-USER*/
-        accountHolder1.setRoles(List.of(holderUserRole));
-        accountHolder2.setRoles(List.of(holderUserRole, adminUserRole));
 }
 
     @AfterEach

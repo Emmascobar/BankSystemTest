@@ -30,7 +30,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         // Create a list of authorities (roles)
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         for(Role role : optionalUser.get().getRoles()) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_"+role.getUser()));
+            authorities.add(new SimpleGrantedAuthority("ROLE_"+role.getRole()));
         }
 
         // Return a Spring Security User with my User username, password and roles

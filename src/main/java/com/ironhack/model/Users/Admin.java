@@ -3,8 +3,6 @@ package com.ironhack.model.Users;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import java.util.List;
-
 @Entity
 @PrimaryKeyJoinColumn(name="id")
 public class Admin extends User{
@@ -12,7 +10,7 @@ public class Admin extends User{
     public Admin() {
     }
 
-    public Admin(String name, String username, String password, List<Role> roles) {
-        super(name, username, password, roles);
+    public Admin(String name, String username, String password) {
+        super(name, username, password);
     }
 }

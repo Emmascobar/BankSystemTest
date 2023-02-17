@@ -24,7 +24,6 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -56,12 +55,12 @@ class ThirdPartyControllerImplTest {
     void setUp() {
         thirdParty = new ThirdParty(new Money(new BigDecimal("500")), "AAB123456");
         transference = new Transference(new BigDecimal("100"), 2L, 3L);
-        accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"), List.of(holderUserRole), LocalDate.of(1988,06,14), null, null);
-        accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"), List.of(holderUserRole), LocalDate.of(1998,02,21), null, null);
+        accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"), LocalDate.of(1988,06,14), null, null);
+        accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"), LocalDate.of(1998,02,21), null, null);
         /* SET USERS AND TIPES OF ROLES */
-        adminUserRole = new Role("ADMIN", accountHolder2);
+        adminUserRole = new Role("ADMIN");
         roleRepository.save(adminUserRole);
-        holderUserRole = new Role("ACCOUNT_HOLDER", accountHolder1);
+        holderUserRole = new Role("ACCOUNT_HOLDER");
         roleRepository.save(holderUserRole);
     }
 

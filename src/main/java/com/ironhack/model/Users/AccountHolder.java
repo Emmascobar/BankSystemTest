@@ -1,10 +1,11 @@
 package com.ironhack.model.Users;
+
 import com.ironhack.model.Utils.Address;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
+
 import javax.validation.constraints.NotBlank;
 import java.time.LocalDate;
-import java.util.List;
 
 @Entity
 @PrimaryKeyJoinColumn(name="id")
@@ -28,8 +29,8 @@ public class AccountHolder extends User {
     public AccountHolder() {
     }
 
-    public AccountHolder(String name, String username, String password, List<Role> roles, LocalDate dateOfBirth, Address primaryAddress, Address mailingAddress) {
-        super(name, username, password, roles);
+    public AccountHolder(String name, String username, String password, LocalDate dateOfBirth, Address primaryAddress, Address mailingAddress) {
+        super(name, username, password);
         this.dateOfBirth = dateOfBirth;
         this.primaryAddress = primaryAddress;
         this.mailingAddress = mailingAddress;

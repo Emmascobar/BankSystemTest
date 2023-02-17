@@ -7,10 +7,12 @@ import com.ironhack.model.Accounts.Account;
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Users.Admin;
 import com.ironhack.model.Users.ThirdParty;
+import com.ironhack.model.Users.User;
 import com.ironhack.service.interfaces.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,10 +34,14 @@ public class AdminControllerImpl implements AdminController {
     public Account getAccountById(@PathVariable Long id) {
         return adminService.getAccountById(id);
     }
-
+    @GetMapping("/admin/users")
+    @ResponseStatus(HttpStatus.OK)
+    public List<User> getAllUsers() {
+        return adminService.getAllUsers();
+    }
     @PostMapping("/admin")
     @ResponseStatus(HttpStatus.CREATED)
-    public Admin addNewAdminUser(Admin admin) {
+    public Admin addNewAdminUser(@RequestBody @Valid Admin admin) {
         return adminService.addNewAdminUser(admin);
     }
 
@@ -49,9 +55,9 @@ public class AdminControllerImpl implements AdminController {
     public ThirdParty addNewThirdPartyAccount(@RequestBody @Valid ThirdParty thirdParty) {
         return adminService.addNewThirdPartyUser(thirdParty);
     }
-    @PostMapping("/admin/accounts")
+    @PostMapping("/admin/accounts/{type}")
     @ResponseStatus(HttpStatus.CREATED)
-    public Account addNewBankAccount(@RequestBody @Valid String typeOfAccount, Account account) {
+    public Account addNewBankAccount(@PathVariable (name = "type") String typeOfAccount, @RequestBody @Valid Account account) {
         return adminService.addNewBankAccount(typeOfAccount, account);
     }
     @PutMapping("/admin/accounts/{id}")

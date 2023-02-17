@@ -54,7 +54,7 @@ public class AccountHolderServiceImpl implements AccountHolderService {
         encodedPassword = passwordEncoder.encode(accountHolder.getPassword());
         accountHolder.setPassword(encodedPassword);
         accountHolder = accountHoldersRepository.save(accountHolder);
-        role = roleRepository.save(new Role("ACCOUNT_HOLDER", accountHolder));
+        role = roleRepository.save(new Role("ACCOUNT_HOLDER"));
         return accountHolder;
     }
 

@@ -2,10 +2,7 @@ package com.ironhack.service.impl;
 
 import com.ironhack.controller.DTOs.SavingMinimumBalanceDTO;
 import com.ironhack.model.Accounts.*;
-import com.ironhack.model.Users.AccountHolder;
-import com.ironhack.model.Users.Admin;
-import com.ironhack.model.Users.Role;
-import com.ironhack.model.Users.ThirdParty;
+import com.ironhack.model.Users.*;
 import com.ironhack.model.Utils.Money;
 import com.ironhack.repository.Accounts.*;
 import com.ironhack.repository.Users.*;
@@ -49,6 +46,8 @@ public class AdminServiceImpl implements AdminService {
     PasswordEncoder passwordEncoder;
     String encodedPassword;
     Role role;
+    @Autowired
+    private UserRepository userRepository;
 
     /** --------------------------------------------------------------------------- **/
 
@@ -62,22 +61,27 @@ public class AdminServiceImpl implements AdminService {
         return accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
     }
 
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
     /* Create a new admin User account */
     public Admin addNewAdminUser(Admin admin) {
         encodedPassword = passwordEncoder.encode(admin.getPassword());
         admin.setPassword(encodedPassword);
-        admin = adminRepository.save(admin);
-        role = roleRepository.save(new Role("ADMIN", admin));
-        return admin;
+        role = new Role("ADMIN");
+        admin.setRoles(List.of(role));
+        return adminRepository.save(admin);
     }
 
     /* Create a new AccountHolder User */
     public AccountHolder addNewAccountHolder(AccountHolder accountHolder) {
         encodedPassword = passwordEncoder.encode(accountHolder.getPassword());
         accountHolder.setPassword(encodedPassword);
-        accountHolder = accountHoldersRepository.save(accountHolder);
-        role = roleRepository.save(new Role("ACCOUNT_HOLDER", accountHolder));
-        return accountHolder;
+        role = new Role("ADMIN");
+        accountHolder.setRoles(List.of(role));
+        return accountHoldersRepository.save(accountHolder);
     }
 
     /* Create a new TPUSer */

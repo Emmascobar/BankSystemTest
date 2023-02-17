@@ -1,29 +1,21 @@
 package com.ironhack.model.Users;
-
-import jakarta.persistence.*;
-import org.jetbrains.annotations.NotNull;
-
-import javax.validation.constraints.NotEmpty;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 @Entity
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @NotNull
-    @NotEmpty
     private String role;
-    @NotNull
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
 
     public Role() {
     }
 
-    public Role(String role, User user) {
+    public Role(String role) {
         this.role = role;
-        this.user = user;
     }
 
     public Long getId() {
@@ -40,13 +32,5 @@ public class Role {
 
     public void setRole(String role) {
         this.role = role;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 }
