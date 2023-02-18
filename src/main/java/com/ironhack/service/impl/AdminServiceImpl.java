@@ -1,5 +1,8 @@
 package com.ironhack.service.impl;
 
+import com.ironhack.controller.DTOs.AccountBalanceDTO;
+import com.ironhack.controller.DTOs.CreditLimitDTO;
+import com.ironhack.controller.DTOs.InterestRateDTO;
 import com.ironhack.controller.DTOs.SavingMinimumBalanceDTO;
 import com.ironhack.model.Accounts.*;
 import com.ironhack.model.Users.*;
@@ -17,7 +20,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -55,179 +57,135 @@ public class AdminServiceImpl implements AdminService {
     public List<Account> getAllAccounts() {
         return accountRepository.findAll();
     }
-
     /* Find and get an account by ID */
     public Account getAccountById(Long id) {
         return accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
     }
-
-    @Override
+    /* Find and get all Users */
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
-
     /* Create a new admin User account */
     public Admin addNewAdminUser(Admin admin) {
         encodedPassword = passwordEncoder.encode(admin.getPassword());
         admin.setPassword(encodedPassword);
         role = new Role("ADMIN");
         admin.setRoles(List.of(role));
-        return adminRepository.save(admin);
+        adminRepository.save(admin);
+        return admin;
     }
-
     /* Create a new AccountHolder User */
     public AccountHolder addNewAccountHolder(AccountHolder accountHolder) {
         encodedPassword = passwordEncoder.encode(accountHolder.getPassword());
         accountHolder.setPassword(encodedPassword);
         role = new Role("ADMIN");
         accountHolder.setRoles(List.of(role));
-        return accountHoldersRepository.save(accountHolder);
+        accountHoldersRepository.save(accountHolder);
+        return accountHolder;
     }
-
     /* Create a new TPUSer */
     public ThirdParty addNewThirdPartyUser(ThirdParty thirdParty) {
-        return thirdPartyRepository.save(thirdParty);
+     /* Active if you want to protect the hashKey*/
+    //        encodedPassword = passwordEncoder.encode(thirdParty.getHashKey());
+    //        thirdParty.setHashKey(encodedPassword);
+    //        role = new Role("NONE");
+
+        thirdPartyRepository.save(thirdParty);
+        return thirdParty;
     }
 
-    //ADD NEW BANK ACCOUNT // Age condition (>24) to create a student or normal account // CASTING PARAMS.
-    public Account addNewBankAccount(String typeOfAccount, Account account) {
-        if (Objects.equals(typeOfAccount, "Saving")) {
-            // SAVING ACCOUNT CREATED
-            Saving saving = new Saving();
-            // CASTING PARAMS FROM ACCOUNT
-            saving.setCreationDate(account.getCreationDate());
-            saving.setBalance(account.getBalance());
-            saving.setPrimaryOwner(account.getPrimaryOwner());
-            saving.setSecondaryOwner(account.getSecondaryOwner());
-            saving.setSecretKey(account.getSecretKey());
-            saving.setStatus(account.getStatus());
-            // SAVE THE NEW SAVING ACCOUNT IN REPOSITORY
-            return savingRepository.save(saving);
+    /* Add a new Saving Bank Account */
+    public Saving addNewSavingAccount(Saving saving) {
+        savingRepository.save(saving);
+        return saving;
+    }
 
-        } else if (Objects.equals(typeOfAccount, "Credit Card")) {
-            // CREDIT CARD ACCOUNT CREATED
-            CreditCard creditCard = new CreditCard();
-            // CASTING PARAMS FROM ACCOUNT
-            creditCard.setCreationDate(account.getCreationDate());
-            creditCard.setBalance(account.getBalance());
-            creditCard.setPrimaryOwner(account.getPrimaryOwner());
-            creditCard.setSecondaryOwner(account.getSecondaryOwner());
-            creditCard.setSecretKey(account.getSecretKey());
-            creditCard.setStatus(account.getStatus());
-            // SAVE THE NEW CREDIT CARD ACCOUNT IN REPOSITORY
-            return creditCardRepository.save(creditCard);
-
-        } else if (Objects.equals(typeOfAccount, "Checking")) {
-            /* Get the age from the birthday with ChronoUnit */
-            LocalDate today = LocalDate.now();
-            LocalDate birthday = account.getPrimaryOwner().getDateOfBirth();
-            Long age = ChronoUnit.YEARS.between(birthday, today);
-            /* Then created conditions for new accounts by Age */
-            if (age < 24) {
-                // STUDENT ACCOUNT CREATED
-                StudentChecking studentChecking = new StudentChecking();
-                // CASTING PARAMS FROM CHECKING TO STUDENT
-                studentChecking.setCreationDate(account.getCreationDate());
-                studentChecking.setBalance(account.getBalance());
-                studentChecking.setPrimaryOwner(account.getPrimaryOwner());
-                studentChecking.setSecondaryOwner(account.getSecondaryOwner());
-                studentChecking.setSecretKey(account.getSecretKey());
-                studentChecking.setStatus(account.getStatus());
-                // SAVE STUDENT CHECKING IN REPOSITORY
-                return studentCheckingRepository.save(studentChecking);
-            } else {
-                // NORMAL CHECKING ACCOUNT CREATED
-                Checking checking = new Checking();
-                // CASTING PARAMS FROM ACCOUNT TO CHECKING
-                checking.setCreationDate(account.getCreationDate());
-                checking.setBalance(account.getBalance());
-                checking.setPrimaryOwner(account.getPrimaryOwner());
-                checking.setSecondaryOwner(account.getSecondaryOwner());
-                checking.setSecretKey(account.getSecretKey());
-                checking.setStatus(account.getStatus());
-                // SAVE NORMAL CHECKING ACCOUNT IN REPOSITORY
-                return checkingRepository.save(checking);
-            }
+    /* Add a new Checking Bank Account / Age condition (>24) to create a student or normal account */
+    public Checking addNewCheckingAccount(Checking checking) {
+        /* Get the age from the birthday with ChronoUnit */
+        LocalDate today = LocalDate.now();
+        LocalDate birthday = checking.getPrimaryOwner().getDateOfBirth();
+        Long age = ChronoUnit.YEARS.between(birthday, today);
+        /* Then created conditions for new accounts by Age */
+        if (age < 24) {
+            // STUDENT ACCOUNT CREATED
+            StudentChecking studentChecking = new StudentChecking();
+            // CAST PARAMS FROM CHECKING TO STUDENT
+            studentChecking.setPrimaryOwner(checking.getPrimaryOwner());
+            studentChecking.setSecondaryOwner(checking.getSecondaryOwner());
+            studentChecking.setSecretKey(checking.getSecretKey());
+            // SAVE STUDENT CHECKING IN REPOSITORY
+            studentCheckingRepository.save(studentChecking);
         } else {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Type of account NO valid. Define a new one");
+            // A NORMAL CHECKING ACCOUNT CREATED
         }
+        return checkingRepository.save(checking);
     }
 
+    /* Add a new CreditCard */
+    public CreditCard addNewCreditCard(CreditCard creditCard) {
+        return creditCardRepository.save(creditCard);
+    }
     /* Update Balance */
-    public void updateBalance(Long id, BigDecimal newAmount){
-        Optional<Account> optionalAccount = accountRepository.findById(id);
+    public void updateBalance(AccountBalanceDTO accountBalanceDTO){
+        Optional<Account> optionalAccount = accountRepository.findById(accountBalanceDTO.getAccountId());
         if (!optionalAccount.isPresent()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
         }
-            optionalAccount.get().setBalance(new Money(newAmount));
+            optionalAccount.get().setBalance(new Money(accountBalanceDTO.getNewBalance()));
             accountRepository.save(optionalAccount.get());
     }
-
-
-    /* Update a complete account */
-    public void updateAccount(Long id, Account account) {
-        Optional<Account> optionalAccount = accountRepository.findById(id);
+    /* Update a Saving account */
+    public void updateSavingAccount(Long id, Saving saving) {
+        Optional<Saving> optionalAccount = savingRepository.findById(id);
         if (optionalAccount.isPresent()) {
-            account.setId(id);
-            accountRepository.save(account);
+            saving.setId(id);
+            accountRepository.save(saving);
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
         }
     }
-
     /* Update Credits limits */
-    public void updateCreditLimit(Long id, BigDecimal creditLimit) {
+    public void updateCreditLimit(Long id, CreditLimitDTO creditLimitDTO) {
         CreditCard creditCard = creditCardRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Credit Card ID not found"));
         /* Check conditions for limits (>100  && < 100000) */
-        if (creditLimit.compareTo(new BigDecimal(100000)) == 1) {
-            throw new RuntimeException("Credit Limit cannot be higher than 100.000. Define a new one");
-        } else if (creditLimit.compareTo(new BigDecimal(100)) == -1 && (creditLimit.compareTo(new BigDecimal(100000)) == 1)) {
-            creditCard.setCreditLimit(creditLimit);
-            creditCardRepository.save(creditCard);
-        } else {
-            throw new RuntimeException("Credit Limit cannot be lower than 100. Define a new one");
+        BigDecimal creditLimit = creditLimitDTO.getCreditLimit();
+        if (creditLimit.compareTo(new BigDecimal(100)) == -1 || creditLimit.compareTo(new BigDecimal(100000)) == 1) {
+            throw new RuntimeException("Credit Limit cannot be lower than 100 or higher than 100000. Define a new one");
         }
+        creditCard.setCreditLimit(creditLimit);
+        creditCardRepository.save(creditCard);
     }
-
     // Update accounts interest rate // SAVINGS AND CREDIT CARDS.
-    public void updateInterestRate(Long id, BigDecimal interestRate) {
-        Account account = accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saving count not found"));
+    public void updateSavingInterestRate(Long id, InterestRateDTO interestRateDTO) {
+        Saving saving = savingRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saving count not found"));
+        BigDecimal interestRate = interestRateDTO.getInterestRate();
         /* Update Saving Interest rate */
-        if (account instanceof Saving) {
-            if (interestRate.compareTo(new BigDecimal("0.5")) == 1) {
-                throw new RuntimeException("Interest Rate cannot be higher than 0.5. Define a new one");
-            } else if (interestRate.compareTo(new BigDecimal("0.5")) == -1 && interestRate.compareTo(new BigDecimal("0.0025")) == 1) {
-                ((Saving) account).setInterestRate(interestRate);
-                savingRepository.save((Saving) account);
+            if (interestRate.compareTo(new BigDecimal("0.5")) == 1 || interestRate.compareTo(new BigDecimal("0.0025")) == -1) {
+                throw new RuntimeException("Interest Rate cannot be higher than 0.5 OR lower than 0.0025. Define a new one");
             } else {
-                throw new RuntimeException("Interest Rate cannot be lower than 0.0025. Define a new one");
+                saving.setInterestRate(interestRate);
+                savingRepository.save(saving);
             }
         }
         /* Update Credit Card Interest rate */
-        if (account instanceof CreditCard) {
-            if (interestRate.compareTo(new BigDecimal("0.1")) == -1) {
-                throw new RuntimeException("Interest Rate cannot be lower than 0.1. Default value = 0.2. Define a new one");
-            } else if (interestRate.compareTo(new BigDecimal("0.2")) == 1 && interestRate.compareTo(new BigDecimal("0.1")) == -1) {
-                ((CreditCard) account).setInterestRate(interestRate);
-                creditCardRepository.save((CreditCard) account);
+        public void updateCreditInterestRate(Long id, InterestRateDTO interestRateDTO) {
+            CreditCard creditCard = creditCardRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saving count not found"));
+            BigDecimal interestRate = interestRateDTO.getInterestRate();
+            if (interestRate.compareTo(new BigDecimal("0.1")) == -1 || interestRate.compareTo(new BigDecimal("0.2")) == 1) {
+                throw new RuntimeException("Interest Rate cannot be lower than 0.1 or higher than 0.2. Default value = 0.2. Define a new one");
             } else {
-                throw new RuntimeException("Interest Rate cannot be higher than 0.2. Define a new one");
+                creditCard.setInterestRate(interestRate);
+                creditCardRepository.save(creditCard);
             }
         }
-    }
-
-
     // Update Minimum Balance // SAVING ACCOUNTS.
     public void updateMinimumBalance(Long id, SavingMinimumBalanceDTO savingMinimumBalanceDTO) {
         Saving updateBalanceSaving = savingRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Saving count not found"));
         BigDecimal minimumBalance = savingMinimumBalanceDTO.getMinimumBalance().getAmount();
-        if (minimumBalance.compareTo(new BigDecimal("100")) == -1) {
-            throw new RuntimeException("Minimum Balance cannot be lower than 100. Define a new one");
-        } else if (minimumBalance.compareTo(new BigDecimal("100")) == 1) {
             updateBalanceSaving.setMinimumBalance(new Money(minimumBalance));
             savingRepository.save(updateBalanceSaving);
         }
-    }
 
     // Delete a account
     public void deleteAccount(Long id) {
@@ -236,5 +194,4 @@ public class AdminServiceImpl implements AdminService {
         }
         accountRepository.deleteById(id);
     }
-
 }

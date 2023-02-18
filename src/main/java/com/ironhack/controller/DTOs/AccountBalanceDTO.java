@@ -1,16 +1,29 @@
 package com.ironhack.controller.DTOs;
 
-import com.ironhack.model.Utils.Money;
+import java.math.BigDecimal;
 
 public class AccountBalanceDTO {
+    private Long accountId;
+    private BigDecimal newBalance;
 
-private Money Balance;
-
-    public Money getBalance() {
-        return Balance;
+    public AccountBalanceDTO(Long accountId, BigDecimal newBalance) {
+        this.accountId = accountId;
+        this.newBalance = newBalance;
     }
 
-    public void setBalance(Money balance) {
-        Balance = balance;
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(Long accountId) {
+        this.accountId = accountId;
+    }
+
+    public BigDecimal getNewBalance() {
+        return newBalance;
+    }
+
+    public void setNewBalance(BigDecimal newBalance) {
+        this.newBalance = newBalance;
     }
 }

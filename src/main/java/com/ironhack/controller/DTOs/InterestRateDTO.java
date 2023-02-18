@@ -2,7 +2,7 @@ package com.ironhack.controller.DTOs;
 
 import java.math.BigDecimal;
 
-public class SavingInterestRateDTO {
+public class InterestRateDTO {
     private BigDecimal interestRate;
 
     public BigDecimal getInterestRate() {

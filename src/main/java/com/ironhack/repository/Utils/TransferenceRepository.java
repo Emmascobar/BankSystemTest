@@ -1,10 +1,10 @@
 package com.ironhack.repository.Utils;
 
-import com.ironhack.model.Utils.Transference;
+import com.ironhack.model.Utils.Transfer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface TransferenceRepository extends JpaRepository<Transference, Long> {
-    Transference findTransferenceById(Long id);
+public interface TransferenceRepository extends JpaRepository<Transfer, Long> {
+    Transfer findTransferenceById(Long id);
 }

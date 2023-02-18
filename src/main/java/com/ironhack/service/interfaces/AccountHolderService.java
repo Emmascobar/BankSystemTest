@@ -2,17 +2,13 @@ package com.ironhack.service.interfaces;
 
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Utils.Money;
-import com.ironhack.security.CustomUserDetails;
-
-import java.math.BigDecimal;
+import com.ironhack.model.Utils.Transfer;
 
 public interface AccountHolderService {
 
-    AccountHolder createAccount (AccountHolder accountHolder);
-    AccountHolder getAccountById(Long id, CustomUserDetails user);
-    Money getAccountBalance (Long id);
-    Money getSavingBalance (Long id);
-    void transference(BigDecimal amount, Long ownerId, String ownerName, Long destinationId);
-
-
+    AccountHolder createAccount(AccountHolder accountHolder);
+    AccountHolder getAccount(Long id);
+    Money getCreditBalance (Long id);
+    Money getSavingBalance(Long id);
+    Transfer transfer(Transfer transfer);
 }

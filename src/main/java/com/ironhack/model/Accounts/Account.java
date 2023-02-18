@@ -22,7 +22,7 @@ public abstract class Account {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotEmpty
+
     @Embedded
     @AttributeOverrides({
             @AttributeOverride(name = "amount", column = @Column(name = "balance_amount")),
@@ -31,7 +31,7 @@ public abstract class Account {
     private Money balance;
     @NotEmpty(message = "Secret key is necessary")
     private Integer secretKey;
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @ManyToOne//(cascade = CascadeType.ALL)
     @JoinColumn(name = "primaryOwner")
     @NotEmpty(message = "Primary Owner is mandatory")
     private AccountHolder primaryOwner;
@@ -39,20 +39,19 @@ public abstract class Account {
     @JoinColumn(name = "secondaryOwner")
     @Nullable
     private AccountHolder secondaryOwner;
-    private LocalDate creationDate;
+    private final LocalDate creationDate = LocalDate.now();
     @Enumerated(EnumType.STRING)
     private Status status;
 
     public Account() {
     }
 
-    public Account(Money balance, Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner, BigDecimal penaltyFee, LocalDate creationDate, Status status) {
+    public Account(Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner) {
         this.balance = new Money(new BigDecimal("0"), Currency.getInstance("USD"), RoundingMode.HALF_EVEN);
         this.secretKey = secretKey;
         this.primaryOwner = primaryOwner;
         this.secondaryOwner = secondaryOwner;
-        this.creationDate = LocalDate.now();
-        this.status = status;
+        this.status = Status.ACTIVE;
     }
 
     public Long getId() {
@@ -96,10 +95,6 @@ public abstract class Account {
 
     public LocalDate getCreationDate() {
         return creationDate;
-    }
-
-    public void setCreationDate(LocalDate creationDate) {
-        this.creationDate = creationDate;
     }
 
     public Status getStatus() {

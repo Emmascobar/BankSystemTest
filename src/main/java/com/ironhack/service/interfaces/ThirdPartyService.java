@@ -1,7 +1,7 @@
 package com.ironhack.service.interfaces;
 
-import java.math.BigDecimal;
+import com.ironhack.model.Utils.Transfer;
 
 public interface ThirdPartyService {
-    void transference(Long OwnId, BigDecimal amount, Long destinationId, Integer destinationSecretKey);
+    Transfer transfer(String hashKey, Transfer transfer);
 }

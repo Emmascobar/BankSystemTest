@@ -2,12 +2,11 @@ package com.ironhack.model.Accounts;
 
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Utils.Money;
-import com.ironhack.model.enums.Status;
 import jakarta.persistence.*;
 import org.jetbrains.annotations.Nullable;
 
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
@@ -23,10 +22,12 @@ public class Saving extends Account {
             @AttributeOverride(name = "amount", column = @Column(name = "minimum_balance_amount")),
             @AttributeOverride(name = "currency", column = @Column(name = "minimum_balance_currency"))
     })
-    @NotEmpty(message = "Minimum balance cannot be empty")
+
+    @DecimalMin(value = "100" )
+    @DecimalMax(value = "1000")
     private Money minimumBalance;
-    @NotEmpty(message = "Interest rate cannot be empty")
-    @Digits(integer = 2, fraction = 4, message = "Default format of IR is 0.0025")
+    @DecimalMax(value = "0.5")
+    @DecimalMin(value = "0.0025")
     private BigDecimal interestRate;
 
     @Nullable
@@ -37,12 +38,20 @@ public class Saving extends Account {
     public Saving() {
     }
 
-    public Saving(Money balance, Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner, BigDecimal penaltyFee, LocalDate creationDate, Status status, Money minimumBalance, BigDecimal interestRate, LocalDate lastUpdate) {
-        super(balance, secretKey, primaryOwner, secondaryOwner, penaltyFee, creationDate, status);
-        this.lastUpdate = lastUpdate;
+    public Saving(Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner) {
+        super( secretKey, primaryOwner, secondaryOwner);
+        this.lastUpdate = LocalDate.now();
         this.minimumBalance = new Money(new BigDecimal("1000"), Currency.getInstance("USD"), RoundingMode.HALF_EVEN);
         this.interestRate = new BigDecimal("0.0025");
         this.penaltyFee = new BigDecimal("40");
+    }
+
+    public Saving(Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner, Money minimumBalance, BigDecimal interestRate) {
+        super(secretKey, primaryOwner, secondaryOwner);
+        this.minimumBalance = minimumBalance;
+        this.interestRate = interestRate;
+        this.penaltyFee = new BigDecimal("40");
+        this.lastUpdate = LocalDate.now();
     }
 
     public Money getMinimumBalance() {
@@ -79,8 +88,7 @@ public class Saving extends Account {
 
     // ANNUAL INTEREST RATE METHOD
     public void setAnnualInterestRate(){
-        LocalDate today = LocalDate.now();
-        long elapsedTime = ChronoUnit.YEARS.between(getLastUpdate(), today);
+        long elapsedTime = ChronoUnit.YEARS.between(getLastUpdate(), LocalDate.now());
         if (elapsedTime > 1) {
             BigDecimal annualRate = getBalance().getAmount().multiply(interestRate);
             setBalance(new Money(getBalance().getAmount().add(annualRate)));

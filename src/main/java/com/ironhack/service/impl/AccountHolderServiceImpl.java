@@ -1,18 +1,18 @@
 package com.ironhack.service.impl;
 
 import com.ironhack.model.Accounts.Account;
+import com.ironhack.model.Accounts.Checking;
 import com.ironhack.model.Accounts.CreditCard;
 import com.ironhack.model.Accounts.Saving;
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Users.Role;
 import com.ironhack.model.Utils.Money;
-import com.ironhack.model.Utils.Transference;
+import com.ironhack.model.Utils.Transfer;
 import com.ironhack.repository.Accounts.AccountRepository;
 import com.ironhack.repository.Accounts.CreditCardRepository;
 import com.ironhack.repository.Users.AccountHoldersRepository;
 import com.ironhack.repository.Users.RoleRepository;
 import com.ironhack.repository.Utils.TransferenceRepository;
-import com.ironhack.security.CustomUserDetails;
 import com.ironhack.service.interfaces.AccountHolderService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,35 +57,21 @@ public class AccountHolderServiceImpl implements AccountHolderService {
         role = roleRepository.save(new Role("ACCOUNT_HOLDER"));
         return accountHolder;
     }
-
-    /* Enter to user account system with ID & Credencials */
-
-    public AccountHolder getAccountById(Long id, CustomUserDetails user) {
-        return accountHoldersRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
-        // AQUI DEBO PASAR CREDENCIALES, AVERIGUAR COMO //
+    @Override
+    public AccountHolder getAccount(Long id) {
+        AccountHolder accountHolder = accountHoldersRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+        return accountHoldersRepository.save(accountHolder);
     }
-
-    public Money getAccountBalance(Long id) {
-        /* Every time the balance is accessed for user. The SAVINGS are checked with the Setmethod,
-        And if it's been more than a month they apply or not, */
-        Account account = accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
-        boolean negativeBalance = (account.getBalance().getAmount().compareTo(((Saving) account).getMinimumBalance().getAmount()) == -1);
-        if (account instanceof Saving && negativeBalance) {
-            account.setBalance(new Money(account.getBalance().getAmount().subtract(((Saving) account).getPenaltyFee())));
-            accountRepository.save(account);
-        }
-        /* Just as a Credit Card is accessed and checked with the setMethod. If the elapsed time is more
+    public Money getCreditBalance(Long id) {
+        CreditCard creditCard = creditCardRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
+        /* Credit Card is accessed and checked with the setMethod. If the elapsed time is more
         than a month, the monthly interest must be applied automatically and returning the updated Balance */
-        else if (account instanceof CreditCard) {
-            ((CreditCard) account).setMonthlyInterestRate();
-            creditCardRepository.save((CreditCard) account);
-        }
-        return account.getBalance();
+        creditCard.setMonthlyInterestRate();
+          creditCardRepository.save(creditCard);
+          return creditCard.getBalance();
     }
-
     public Money getSavingBalance(Long id) {
         Account account = accountRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
-        ;
         /* Every time the balance of a Saving Account is accessed, it is checked with the setMethod. if
         the elapsed time is more than a year, the interest must be applied automatically and returning
         the updated Balance. */
@@ -94,38 +80,32 @@ public class AccountHolderServiceImpl implements AccountHolderService {
         }
         return account.getBalance();
     }
+    public Transfer transfer(Transfer transfer) {
+        Account destination = accountRepository.findById(transfer.getDestinationId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination ID not found"));
+        Account ownAccount = accountRepository.findById(transfer.getOwnerId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Origin ID not found"));
 
-
-    public void transference(BigDecimal amount, Long ownerId, String ownerName, Long destinationId) {
-        Account destination = accountRepository.findById(destinationId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Destination ID not found"));
-        ;
-        Account ownAccount = accountRepository.findById(ownerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Origin Account ID not found"));
-        ;
-
-        if (destination.getPrimaryOwner().getName() == ownerName || destination.getSecondaryOwner().getName() == ownerName) {
-            /* Checking funds */
-            if (amount.compareTo(destination.getBalance().getAmount()) == -1) {
-                /* Enough founds to get a transfer */
-                destination.setBalance(new Money(destination.getBalance().increaseAmount(amount)));
-                accountRepository.save(destination);
-                ownAccount.setBalance(new Money(ownAccount.getBalance().decreaseAmount(amount)));
-
-                /* Now check the balance. if it is negative could apply fees*/
-                boolean negativeBalance = (ownAccount.getBalance().getAmount().compareTo(((Saving) ownAccount).getMinimumBalance().getAmount()) == -1);
-                if (ownAccount instanceof Saving && negativeBalance) {
+        // Checking Balance & the secretKey //
+        boolean enoughBalance = ownAccount.getBalance().getAmount().compareTo(transfer.getAmount()) == 1;
+        String primaryOwner = destination.getPrimaryOwner().getName();
+        String secondaryOwner = destination.getSecondaryOwner().getName();
+        if (!enoughBalance && destination.getPrimaryOwner().getName() == transfer.getDestinationName() || destination.getSecondaryOwner().getName() == transfer.getDestinationName() ) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Insufficient funds Or Wrong destination name, please check");
+        } else {
+            destination.setBalance(new Money(destination.getBalance().increaseAmount(transfer.getAmount())));
+            ownAccount.setBalance(new Money(ownAccount.getBalance().decreaseAmount(transfer.getAmount())));
+            accountRepository.save(destination);
+            // Before save Origin balance check conditions of Saving or Checking minimum balance and PenaltyFee.
+            if (ownAccount instanceof Saving || ownAccount instanceof Checking) {
+                BigDecimal minimumBalance = ((Saving) ownAccount).getMinimumBalance().getAmount();
+                if (ownAccount.getBalance().getAmount().compareTo(minimumBalance) == -1) {
+                    /* Could apply fees*/
                     ownAccount.setBalance(new Money(ownAccount.getBalance().getAmount().subtract(((Saving) ownAccount).getPenaltyFee())));
                 }
-                accountRepository.save(ownAccount);
-                /* Save & Registry transfer on system and database */
-                Transference registry = new Transference(amount, destinationId, ownerId);
-                transferenceRepository.save(registry);
-
-                log.info("Transference registry on DateBase, from " + ownerId + " to " + destinationId + " with a amount of " + amount + " at " + LocalDate.now());
-
-                /* Without funds for transfer money*/
-            } else {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "Insufficient funds");
             }
+            accountRepository.save(ownAccount);
         }
+        /* Save & Registry transfer on system and database */
+        log.info("Transference registry on DateBase, from " + transfer.getId() + " to " + transfer.getDestinationId() + " with a amount of " + transfer.getAmount() + " at " + LocalDate.now());
+        return transferenceRepository.save(transfer);
     }
 }

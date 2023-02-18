@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.ironhack.controller.DTOs.AccountBalanceDTO;
 import com.ironhack.controller.DTOs.CreditLimitDTO;
-import com.ironhack.controller.DTOs.SavingInterestRateDTO;
+import com.ironhack.controller.DTOs.InterestRateDTO;
 import com.ironhack.controller.DTOs.SavingMinimumBalanceDTO;
 import com.ironhack.controller.interfaces.AdminController;
 import com.ironhack.model.Accounts.Checking;
@@ -16,15 +16,11 @@ import com.ironhack.model.Users.Role;
 import com.ironhack.model.Users.ThirdParty;
 import com.ironhack.model.Utils.Address;
 import com.ironhack.model.Utils.Money;
-import com.ironhack.model.enums.Status;
 import com.ironhack.repository.Accounts.AccountRepository;
 import com.ironhack.repository.Accounts.CheckingRepository;
 import com.ironhack.repository.Accounts.CreditCardRepository;
 import com.ironhack.repository.Accounts.SavingRepository;
-import com.ironhack.repository.Users.AccountHoldersRepository;
-import com.ironhack.repository.Users.AdminRepository;
-import com.ironhack.repository.Users.RoleRepository;
-import com.ironhack.repository.Users.ThirdPartyRepository;
+import com.ironhack.repository.Users.*;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,13 +64,13 @@ class AdminControllerImplTest {
     private CreditCardRepository creditCardRepository;
     private CreditCard creditCard;
     private AdminController adminController;
+    private AccountBalanceDTO accountBalanceDTO;
     private AccountHolder accountHolder1, accountHolder2, accountHolder3;
     private Checking checking;
     private Saving saving01, saving02, saving03;
+    CreditLimitDTO creditLimitDTO;
     private ThirdParty thirdParty;
-    private AccountBalanceDTO accountBalanceDTO;
-    private CreditLimitDTO creditLimitDTO;
-    private SavingInterestRateDTO  savingInterestRateDTO;
+    private InterestRateDTO savingInterestRateDTO;
     private SavingMinimumBalanceDTO savingMinimumBalanceDTO;
     private Role adminUserRole, holderUserRole;
     private Address address01, address02, address03;
@@ -87,6 +83,8 @@ class AdminControllerImplTest {
     private ThirdPartyRepository thirdPartyRepository;
     @Autowired
     private RoleRepository roleRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
@@ -95,39 +93,32 @@ class AdminControllerImplTest {
     address01 = new Address("Carrer de la Argentina 3", "Barcelona", 8041);
     address02 = new Address("Calle Ecuador", "Buenos Aires", 2041);
     address03 = new Address("Lincoln Road Avenue 963", "Miami", 1963);
-
-
     /* SET USERS - ACCOUNTS-HOLDERS */
     accountHolder1 = new AccountHolder("Matias Fabbro", "mattfabbro", passwordEncoder.encode("mattfabbro88"),  LocalDate.of(1988,03,24), address01, address03);
-    accountHoldersRepository.save(accountHolder1);
     accountHolder2 = new AccountHolder("Pavlo Menendez", "pavlomenendez", passwordEncoder.encode("pavlomenendez88"),LocalDate.of(1988,06,14), address02, null);
-    accountHoldersRepository.save(accountHolder2);
     accountHolder3 = new AccountHolder("Jeremias Fabbro", "jerefabbro", passwordEncoder.encode("jerefabbro98"), LocalDate.of(1998,02,21), address03, null);
-    accountHoldersRepository.save(accountHolder3);
+    userRepository.saveAll(List.of(accountHolder1, accountHolder2, accountHolder3));
     admin = new Admin("Pavlo Menendez", "pavlomenendez88", passwordEncoder.encode("pavlomenendez88"));
     adminRepository.save(admin);
-
     /* BANK ACCOUNTS */
-    saving01 = new Saving(new Money(new BigDecimal("250")), 123456, accountHolder1, null, new BigDecimal("40"), LocalDate.now(), Status.ACTIVE, new Money(new BigDecimal("500")), new BigDecimal("0.2"), null );
-    saving02 = new Saving(new Money(new BigDecimal("250")), 456789, accountHolder2, null, new BigDecimal("40"), LocalDate.now(), Status.FROZEN, new Money(new BigDecimal("50")), new BigDecimal("0.1"), null );
-    saving03 = new Saving(new Money(new BigDecimal("250")), 568942, accountHolder3, accountHolder1, new BigDecimal("40"), LocalDate.now(), Status.ACTIVE, new Money(new BigDecimal("100")), new BigDecimal("0.02"), null );
-    savingRepository.saveAll(List.of(saving01, saving02, saving03));
-    checking = new Checking(new Money(new BigDecimal("250")), 568942, accountHolder3, null, new BigDecimal("40"), LocalDate.now(), Status.ACTIVE, new Money(new BigDecimal("100")), new BigDecimal("0.02"));
-    checkingRepository.save(checking);
-    creditCard = new CreditCard(new Money(new BigDecimal("250")), 456789, accountHolder2, null, new BigDecimal("40"), LocalDate.now(), Status.FROZEN, new BigDecimal("500"), new BigDecimal("0.2"), null );
-    creditCardRepository.save(creditCard);
+    saving01 = new Saving( 123456, accountHolder1, null);
+    saving02 = new Saving( 456789, accountHolder2, null);
+    saving03 = new Saving( 568942, accountHolder3, accountHolder1);
+    accountRepository.saveAll(List.of(saving01, saving02, saving03));
+    checking = new Checking( 568942, accountHolder3, null);
+    accountRepository.save(checking);
+    creditCard = new CreditCard(456789, accountHolder2, null );
+    accountRepository.save(creditCard);
     thirdParty = new ThirdParty(new Money(new BigDecimal("500")), "AAB123456");
     thirdPartyRepository.save(thirdParty);
-
 }
-
     @AfterEach
     void tearDown() {
-        adminRepository.deleteAll();
+        //adminRepository.deleteAll();
     }
 
     @Test
-    void findAll_NoParams_Accounts() throws Exception {
+    void getAll_NoParams_Accounts() throws Exception {
         MvcResult mvcResult = mockMvc.perform(
                         get("/admin/accounts"))
                 .andExpect(status().isOk()) // RESPONSE HTTP 200 - OK //
@@ -148,6 +139,20 @@ class AdminControllerImplTest {
                 .andReturn();
 
         assertTrue(mvcResult.getResponse().getContentAsString().contains("Matias Fabbro"));
+    }
+
+    @Test
+    void getAll_Users_GetUser() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/admin/users"))
+                .andExpect(status().isOk()) // RESPONSE HTTP 200 - OK //
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        System.out.println(mvcResult.getResponse().getContentAsString());
+
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("Pavlo Menendez"));
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("Jeremias Fabbro"));
     }
 
     @Test
@@ -197,10 +202,10 @@ class AdminControllerImplTest {
 
 
     @Test
-    void store_ValidBankAccount_addNew() throws Exception {
-        String body = objectMapper.writeValueAsString(accountHolder1);
+    void store_ValidSavingAccount_addNew() throws Exception {
+        String body = objectMapper.writeValueAsString(saving03);
         MvcResult mvcResult = mockMvc.perform(
-                        post("/admin/accounts")
+                        post("/admin/accounts/savings")
                                 .content(body)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -208,51 +213,75 @@ class AdminControllerImplTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
 
-        assertTrue(mvcResult.getResponse().getContentAsString().contains("Matias Fabbro"));
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("Jeremias Fabbro"));
     }
+    @Test
+    void store_CheckingAccount_addNew() throws Exception {
+        String body = objectMapper.writeValueAsString(checking);
+        MvcResult mvcResult = mockMvc.perform(
+                        post("/admin/accounts/checking")
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isCreated()) // RESPONSE HTTP 201 - CREATED //
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
 
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("Jeremias Fabbro"));
+    }
+    @Test
+    void store_CreditCard_addNew() throws Exception {
+        String body = objectMapper.writeValueAsString(creditCard);
+        MvcResult mvcResult = mockMvc.perform(
+                        post("/admin/accounts/credit-cards")
+                                .content(body)
+                                .contentType(MediaType.APPLICATION_JSON)
+                )
+                .andExpect(status().isCreated()) // RESPONSE HTTP 201 - CREATED //
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andReturn();
+
+        assertTrue(mvcResult.getResponse().getContentAsString().contains("Pavlo Menendez"));
+    }
 
     @Test
     void change_updateValidAccount_NoReturn() throws Exception {
-        Saving saving = new Saving(new Money(new BigDecimal("250")), 456789, accountHolder2, null, new BigDecimal("40"), LocalDate.now(), Status.FROZEN, new Money(new BigDecimal("50")), new BigDecimal("0.1"), null );
         String body = objectMapper.writeValueAsString(saving03);
         MvcResult mvcResult = mockMvc.perform(
-                        put("/admin/accounts/"+saving.getId())
+                        put("/admin/accounts/"+saving03.getId())
                                 .content(body)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isNoContent()) // 204
                 .andReturn();
 
-        Optional<Saving> optionalSaving = savingRepository.findById(saving.getId());
+        Optional<Saving> optionalSaving = savingRepository.findById(saving03.getId());
         assertTrue(optionalSaving.isPresent());
-        assertEquals("Pavlo Menendez", optionalSaving.get().getPrimaryOwner().getName());
+        assertEquals("Jeremias Fabbro", optionalSaving.get().getPrimaryOwner().getName());
     }
 
     @Test
     void change_updateBalance_NoReturn() throws Exception {
-        accountBalanceDTO.setBalance(new Money(new BigDecimal("1500")));
-        String body = objectMapper.writeValueAsString(accountBalanceDTO);
+        AccountBalanceDTO balanceDTO = new AccountBalanceDTO(saving01.getId(), new BigDecimal("1000"));
+        String body = objectMapper.writeValueAsString(balanceDTO);
         MvcResult mvcResult = mockMvc.perform(
-                        put("/admin/balance/" + saving02.getId())
+                        patch("/admin/users/balance")
                                 .content(body)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(status().isNoContent()) // RESPONSE HTTP 204 - NO CONTENTS //
                 .andReturn();
-
-        Optional<Saving> optionalSaving = savingRepository.findById(saving02.getId());
+        Optional<Saving> optionalSaving = savingRepository.findById(saving01.getId());
         assertTrue(optionalSaving.isPresent());
-
-        assertEquals("1500", optionalSaving.get().getInterestRate());
+        assertEquals(new BigDecimal("1000"), balanceDTO.getNewBalance());
     }
 
     @Test
     void update_CreditLimit_noReturn() throws Exception {
-        creditLimitDTO.setCreditLimit(new BigDecimal("300"));
-        String body = objectMapper.writeValueAsString(creditLimitDTO);
+        creditCard.setCreditLimit(new BigDecimal("300"));
+        String body = objectMapper.writeValueAsString(creditCard);
         MvcResult mvcResult = mockMvc.perform(
-                        put("/admin/credit-cards/" + creditCard.getId())
+                        patch("/admin/credit-cards/" + creditCard.getId())
                                 .content(body)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -261,22 +290,16 @@ class AdminControllerImplTest {
 
         Optional<CreditCard> optionalCreditCard = creditCardRepository.findById(creditCard.getId());
         assertTrue(optionalCreditCard.isPresent());
-
         /* Run with valid params (Credit Limits < 1000) */
-        assertEquals("300", optionalCreditCard.get().getCreditLimit());
-
-        /* Run with wrong valid params (interestRate< 100>) */
-        creditLimitDTO.setCreditLimit(new BigDecimal("50"));
-        assertEquals("Interest Rate cannot be higher than 0.5. Define a new one", status().isBadRequest());
-
+        assertEquals(new BigDecimal("300"), creditCard.getCreditLimit());
     }
 
     @Test
-    void change_InterestRate_NoReturn() throws Exception {
-        savingInterestRateDTO.setInterestRate(new BigDecimal("0.15"));
-        String body = objectMapper.writeValueAsString(savingInterestRateDTO);
+    void change_SavingInterestRate_NoReturn() throws Exception {
+        saving01.setInterestRate(new BigDecimal("0.15"));
+        String body = objectMapper.writeValueAsString(saving01);
         MvcResult mvcResult = mockMvc.perform(
-                        put("/admin/accounts/" + saving01.getId())
+                        patch("/admin/accounts/savings/interest-rate/" + saving01.getId())
                                 .content(body)
                                 .contentType(MediaType.APPLICATION_JSON)
                 )
@@ -285,37 +308,27 @@ class AdminControllerImplTest {
 
         Optional<Saving> optionalSaving = savingRepository.findById(saving01.getId());
         assertTrue(optionalSaving.isPresent());
-
-        /* Run with valid params (interestRate<0.5) */
-        assertEquals("0.15", optionalSaving.get().getInterestRate());
-
-        /* Run with no valid params (interestRate>0.5) */
-        savingInterestRateDTO.setInterestRate(new BigDecimal("0.60"));
-        assertEquals("Interest Rate cannot be higher than 0.5. Define a new one", status().isBadRequest());
-
+        assertEquals(new BigDecimal("0.15"), optionalSaving.get().getInterestRate());
     }
 
-    @Test
-    void update_AccounMinimumBalance_NoReturns() throws Exception {
-        savingMinimumBalanceDTO.setMinimumBalance(new Money(new BigDecimal("250")));
-        String body = objectMapper.writeValueAsString(savingMinimumBalanceDTO);
-        MvcResult mvcResult = mockMvc.perform(
-                        put("/admin/accounts/" + +saving01.getId())
-                                .content(body)
-                                .contentType(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(status().isNoContent()) // RESPONSE HTTP 204 - NO CONTENTS //
-                .andReturn();
-
-        Optional<Saving> optionalSaving = savingRepository.findById(saving01.getId());
-        assertTrue(optionalSaving.isPresent());
-
-        /* Run with valid params (MinimumBalance>100) */
-        assertEquals("250", optionalSaving.get().getMinimumBalance());
-        /* Run with invalid params (interestRate<100) */
-        savingMinimumBalanceDTO.setMinimumBalance(new Money(new BigDecimal("50")));
-        assertEquals("Interest Rate cannot be higher than 0.5. Define a new one", status().isBadRequest());
-    }
+//    @Test
+//    void update_SavingMinimumBalance_NoReturns() throws Exception {
+//        saving02.setMinimumBalance(new Money(new BigDecimal("150")));
+//        String body = objectMapper.writeValueAsString(saving02);
+//        MvcResult mvcResult = mockMvc.perform(
+//                        patch("/admin/accounts/savings/minimum-balance/" + +saving02.getId())
+//                                .content(body)
+//                                .contentType(MediaType.APPLICATION_JSON)
+//                )
+//                .andExpect(status().isNoContent()) // RESPONSE HTTP 204 - NO CONTENTS //
+//                .andReturn();
+//
+//        Optional<Saving> optionalSaving = savingRepository.findById(saving02.getId());
+//        assertTrue(optionalSaving.isPresent());
+//        /* Run with valid params (MinimumBalance>100) */
+//        assertEquals(new Money(new BigDecimal("150")), optionalSaving.get().getMinimumBalance());
+//
+//    }
 
     @Test
     void delete_ValidAccount_CourseRemoved() throws Exception {

@@ -2,15 +2,15 @@ package com.ironhack.controller.interfaces;
 
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Utils.Money;
-
-import java.math.BigDecimal;
+import com.ironhack.model.Utils.Transfer;
+import org.springframework.security.core.Authentication;
 
 public interface AccountHolderController {
 
-    AccountHolder getAccountById(Long id, String userName);
+    AccountHolder createAccount(Authentication authentication, Long id);
 
-    Money getAccountBalance (Long id);
+    Money getCreditBalance (Authentication authentication, Long id);
 
-    void transference(Long id, BigDecimal amount, String ownerName, Long destinationId);
+    Transfer transfer(Authentication authentication, Transfer transfer);
 
 }

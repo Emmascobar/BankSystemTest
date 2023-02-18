@@ -1,25 +1,24 @@
 package com.ironhack.controller.impl;
 
-import com.ironhack.controller.interfaces.ThirdPartyController;
+import com.ironhack.controller.interfaces.ThridPartyController;
+import com.ironhack.model.Utils.Transfer;
 import com.ironhack.service.interfaces.ThirdPartyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
-
 @RestController
-public class ThirdPartyControllerImpl implements ThirdPartyController {
+public class ThirdPartyControllerImpl implements ThridPartyController {
 
     @Autowired
     ThirdPartyService thirdPartyService;
 
-
-    /* Transferences POSTMAPPING of ThirdParty accounts */
-    //AQUI TENGO QUE PONER EL SECRET KEY PARA AUTENTIFICAR.?¿¿?¿¿?¿?¿?¿?¿?¿
-    @PostMapping("User/accounts/thirdparty/{id}/transference")
+    @PostMapping("User/accounts/thirdparty/transfer/{hashkey}")
     @ResponseStatus(HttpStatus.CREATED)
-    public void transference(Long id, BigDecimal amount, Long destinationId, Integer destinationSecretKey) {
-        thirdPartyService.transference(id, amount, destinationId, destinationSecretKey);
+    public Transfer transfer(Authentication authentication, @RequestParam String hashKey, @RequestBody Transfer transfer) {
+        return thirdPartyService.transfer(hashKey, transfer);
     }
+
 }
+

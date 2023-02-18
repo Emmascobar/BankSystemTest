@@ -10,26 +10,29 @@ import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 
 @Entity
-public class Transference {
+public class Transfer {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @NotEmpty
     private BigDecimal amount;
     @NotNull
     private Long destinationId;
+    private String destinationName;
     @NotNull
     private Long ownerId;
 
-    public Transference() {
+    private Integer secretKey;
+
+    public Transfer() {
     }
 
-    public Transference(BigDecimal amount, Long destinationId, Long ownerId) {
+    public Transfer(BigDecimal amount, Long destinationId, String destinationName,Long ownerId, Integer secretKey) {
         this.amount = amount;
         this.destinationId = destinationId;
+        this.destinationName = destinationName;
         this.ownerId = ownerId;
-
+        this.secretKey = secretKey;
     }
 
     public Long getId() {
@@ -56,12 +59,28 @@ public class Transference {
         this.destinationId = destinationId;
     }
 
+    public String getDestinationName() {
+        return destinationName;
+    }
+
+    public void setDestinationName(String destinationName) {
+        this.destinationName = destinationName;
+    }
+
     public Long getOwnerId() {
         return ownerId;
     }
 
     public void setOwnerId(Long ownerId) {
         this.ownerId = ownerId;
+    }
+
+    public Integer getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(Integer secretKey) {
+        this.secretKey = secretKey;
     }
 }
 

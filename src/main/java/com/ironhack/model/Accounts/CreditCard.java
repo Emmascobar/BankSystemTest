@@ -2,11 +2,11 @@ package com.ironhack.model.Accounts;
 
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Utils.Money;
-import com.ironhack.model.enums.Status;
 import jakarta.persistence.Entity;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 
-import javax.validation.constraints.Digits;
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -16,10 +16,13 @@ import java.time.temporal.ChronoUnit;
 @PrimaryKeyJoinColumn(name="id")
 public class CreditCard extends Account{
 
+    @DecimalMin(value = "100")
+    @DecimalMax(value = "100000")
     @NotEmpty(message = "Credit limit cannot be empty")
     private BigDecimal creditLimit;
+    @DecimalMin(value = "0.1")
+    @DecimalMax(value = "0.2")
     @NotEmpty(message = "Interest rate cannot be empty")
-    @Digits(integer = 2, fraction = 4, message = "Default format of IR is 0.0025")
     private BigDecimal interestRate;
 
     private LocalDate lastUpdate;
@@ -27,11 +30,18 @@ public class CreditCard extends Account{
     public CreditCard() {
     }
 
-    public CreditCard(Money balance, Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner, BigDecimal penaltyFee, LocalDate creationDate, Status status, BigDecimal creditLimit, BigDecimal interestRate, LocalDate lastUpdate) {
-        super(balance, secretKey, primaryOwner, secondaryOwner, penaltyFee, creationDate, status);
-        this.lastUpdate = lastUpdate;
+    public CreditCard(Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner) {
+        super(secretKey, primaryOwner, secondaryOwner);
+        this.lastUpdate = LocalDate.now();
         this.creditLimit = new BigDecimal("100");
         this.interestRate = new BigDecimal("0.2");
+    }
+
+    public CreditCard(Integer secretKey, AccountHolder primaryOwner, AccountHolder secondaryOwner, BigDecimal creditLimit, BigDecimal interestRate) {
+        super(secretKey, primaryOwner, secondaryOwner);
+        this.creditLimit = creditLimit;
+        this.interestRate = interestRate;
+        this.lastUpdate = LocalDate.now();
     }
 
     public BigDecimal getCreditLimit() {
@@ -61,8 +71,8 @@ public class CreditCard extends Account{
         LocalDate today = LocalDate.now();
         long elapsedTime = ChronoUnit.MONTHS.between(getLastUpdate(), today);
         if (elapsedTime > 1) {
-            BigDecimal monthlyInteres = getInterestRate().divide(new BigDecimal("12"));
-            setBalance(new Money(getBalance().getAmount().add(monthlyInteres)));
+            BigDecimal monthlyInterest = getInterestRate().divide(new BigDecimal("12"));
+            setBalance(new Money(getBalance().getAmount().add(monthlyInterest)));
             setLastUpdate(LocalDate.now());
         }
     }

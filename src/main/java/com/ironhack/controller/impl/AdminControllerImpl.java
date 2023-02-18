@@ -1,9 +1,14 @@
 package com.ironhack.controller.impl;
 
 import com.ironhack.controller.DTOs.AccountBalanceDTO;
+import com.ironhack.controller.DTOs.CreditLimitDTO;
+import com.ironhack.controller.DTOs.InterestRateDTO;
 import com.ironhack.controller.DTOs.SavingMinimumBalanceDTO;
 import com.ironhack.controller.interfaces.AdminController;
 import com.ironhack.model.Accounts.Account;
+import com.ironhack.model.Accounts.Checking;
+import com.ironhack.model.Accounts.CreditCard;
+import com.ironhack.model.Accounts.Saving;
 import com.ironhack.model.Users.AccountHolder;
 import com.ironhack.model.Users.Admin;
 import com.ironhack.model.Users.ThirdParty;
@@ -14,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -22,7 +26,6 @@ public class AdminControllerImpl implements AdminController {
 
     @Autowired
     AdminService adminService;
-
     /* Set of ADMIN routes */
     @GetMapping("/admin/accounts")
     @ResponseStatus(HttpStatus.OK)
@@ -44,7 +47,6 @@ public class AdminControllerImpl implements AdminController {
     public Admin addNewAdminUser(@RequestBody @Valid Admin admin) {
         return adminService.addNewAdminUser(admin);
     }
-
     @PostMapping("/admin/users/account-holder")
     @ResponseStatus(HttpStatus.CREATED)
     public AccountHolder addNewAccountHolder(@RequestBody @Valid AccountHolder accountHolder) {
@@ -55,34 +57,49 @@ public class AdminControllerImpl implements AdminController {
     public ThirdParty addNewThirdPartyAccount(@RequestBody @Valid ThirdParty thirdParty) {
         return adminService.addNewThirdPartyUser(thirdParty);
     }
-    @PostMapping("/admin/accounts/{type}")
+    @PostMapping("/admin/accounts/savings")
     @ResponseStatus(HttpStatus.CREATED)
-    public Account addNewBankAccount(@PathVariable (name = "type") String typeOfAccount, @RequestBody @Valid Account account) {
-        return adminService.addNewBankAccount(typeOfAccount, account);
+    public Account addNewSavingAccount(@RequestBody @Valid Saving saving) {
+        return adminService.addNewSavingAccount(saving);
+    }
+    @PostMapping("/admin/accounts/checking")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Account addNewCheckingAccount(@RequestBody @Valid Checking checking) {
+        return adminService.addNewCheckingAccount(checking);
+    }
+    @PostMapping("/admin/accounts/credit-cards")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Account addNewCreditCard(@RequestBody @Valid CreditCard creditCard) {
+        return adminService.addNewCreditCard(creditCard);
     }
     @PutMapping("/admin/accounts/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateAccount(@PathVariable Long id, @RequestBody @Valid Account account) {
-        adminService.updateAccount(id, account);
+    public void updateSavingAccount(@PathVariable Long id, @RequestBody @Valid Saving saving) {
+        adminService.updateSavingAccount(id, saving);
     }
-    @PatchMapping("/admin/balance/{id}")
+    @PatchMapping("/admin/users/balance")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateBalance(@PathVariable Long id, @RequestBody @Valid BigDecimal newAmount, AccountBalanceDTO accountBalanceDTO) {
-        adminService.updateBalance(id,newAmount);
+    public void updateBalance(@RequestBody @Valid AccountBalanceDTO accountBalanceDTO) {
+        adminService.updateBalance(accountBalanceDTO);
     }
     @PatchMapping("/admin/credit-cards/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateCreditLimit(@PathVariable Long id, @RequestBody @Valid BigDecimal creditLimit) {
-        adminService.updateCreditLimit(id, creditLimit);
+    public void updateCreditLimit(@PathVariable Long id, @RequestBody @Valid CreditLimitDTO creditLimitDTO) {
+        adminService.updateCreditLimit(id, creditLimitDTO);
     }
-    @PatchMapping("/admin/accounts/{id}")
+    @PatchMapping("/admin/accounts/savings/interest-rate/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateInterestRate(@PathVariable Long id, @RequestBody @Valid BigDecimal interestRate) {
-        adminService.updateCreditLimit(id, interestRate);
+    public void updateSavingInterestRate(@PathVariable Long id, @RequestBody @Valid InterestRateDTO interestRateDTO) {
+        adminService.updateSavingInterestRate(id, interestRateDTO);
     }
-    @PatchMapping("/admin/accounts/savings/{id}")
+    @PatchMapping("/admin/accounts/credit-cards/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void updateMinimumBalance(@PathVariable Long id, @RequestBody SavingMinimumBalanceDTO savingMinimumBalanceDTO) {
+    public void updateCreditInterestRate(Long id, @RequestBody @Valid InterestRateDTO interestRateDTO) {
+        adminService.updateCreditInterestRate(id, interestRateDTO);
+    }
+    @PatchMapping("/admin/accounts/savings/minimum-balance/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateMinimumBalance(@PathVariable Long id, @RequestBody @Valid SavingMinimumBalanceDTO savingMinimumBalanceDTO) {
         adminService.updateMinimumBalance(id, savingMinimumBalanceDTO);
     }
     @DeleteMapping("/admin/accounts/{id}")

@@ -17,14 +17,11 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @Override
     public User saveUser(User user) {
         // Encode the user's password for security before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
     }
-
-    @Override
     public List<User> getUsers() {
         return userRepository.findAll();
     }
